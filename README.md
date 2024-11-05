@@ -59,3 +59,22 @@
             to the development platform, the design (UI/UX) and the code: it can be a runnable
             program, a link to a website where the project is hosted, a video of the project,
             etc.
+
+## KeywordAI
+
+### Pre-requisites
+
+To run this program, you will need:
+
+- A Node.js and Vite environment.
+- A Spotify Developer Account.
+
+### Run
+
+When your environment is up to date, you can execute in your terminal the following code:
+
+```
+npm run dev
+```
+
+Copy the link to your browser and connect your account to spotify.
