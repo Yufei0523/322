@@ -19,12 +19,17 @@ if (!code) {
 
     const createPlaylistButton = document.getElementById("create_playlist_button");
     const playlistName = document.getElementById("playlist_name");
+    const keywordTitle = document.getElementById("keyword_title");
 
     if (createPlaylistButton) {
         createPlaylistButton.addEventListener("click", async () => {
             const userID = profile.id;
             try {
                 const playlist = await createPlaylist(userID, accessToken, playlistName.value);
+                if (keywordTitle.value) {
+                    const playlist_id = playlist.id;
+                    addSong_based_on_title(accessToken, playlist_id, keywordTitle.value);
+                }
                 console.log("Playlist created", playlist);
             } catch (error) {
                 console.error("Error creating playlist", error);
@@ -158,4 +163,59 @@ async function createPlaylist(userID, accessToken, playlistName) {
     }
 
     return await result.json();
+}
+
+//////////// addSong_based_on_title function ////////////
+
+async function addSong_based_on_title(accessToken, playlist_id, keywordTitle) {
+
+    if (!keywordTitle) {
+        keywordTitle = "Example";
+    }
+
+    // song uris recovery
+
+    const result_research = await fetch(`https://api.spotify.com/v1/search?q=${keywordTitle}&type=track`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        }
+    });
+
+    if (!result_research.ok) {
+        throw new Error(`HTTP error! status: ${result_research.status}`);
+    }
+
+    const result_json = await result_research.json();
+    let uris = [];
+    console.log(result_json);
+    console.log('IDs des pistes :');
+    result_json.tracks.items.forEach(item => {
+        uris.push(item.uri);
+        console.log(`ID de la piste: ${item.id}`);
+    });
+
+    console.log(`tableau uris: ${uris}`);
+
+    // playlist song adding
+
+    const param_add = {
+        uris: uris,
+        position: 0
+    };
+
+    const result_add = await fetch(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(param_add)
+    });
+
+    if (!result_add.ok) {
+        throw new Error(`HTTP error! status: ${result_add.status}`);
+    }
+    
+    return await result_add.json();
 }
