@@ -170,7 +170,7 @@ async function createPlaylist(userID, accessToken, playlistName) {
 async function addSong_based_on_title(accessToken, playlist_id, keywordTitle) {
 
     if (!keywordTitle) {
-        keywordTitle = "Example";
+        keywordTitle = "Blue";
     }
 
     // song uris recovery
