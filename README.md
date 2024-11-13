@@ -78,3 +78,5 @@ npm run dev
 ```
 
 Copy the link to your browser and connect your account to spotify.
+
+**Note:** You can only run the code if you changed the userID in the first line of script.js.
