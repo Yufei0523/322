@@ -64,10 +64,12 @@
 
 ### Pre-requisites
 
-To run this program, you will need:
+To run this program, you will need a **Spotify Developer Account**.
 
-- A Node.js and Vite environment.
-- A Spotify Developer Account.
+Then, install the packages in package.json:
+```
+npm install # Make sure to be in the Spotify_info_display folder. (We will change the name later)
+```
 
 ### Run
 
@@ -77,7 +79,7 @@ When your environment is up to date, you can execute in your terminal the follow
 npm run dev
 ```
 
-Copy the link to your browser and connect your account to spotify.
+Copy the url to your browser and connect your account to spotify.
 
 The default name of playlist is "NewPlaylist".
 The default keyword is "Blue".
