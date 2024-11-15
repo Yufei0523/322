@@ -1,4 +1,4 @@
-const clientId = "034e6eebfdf44cf4bef77047c2647420"; // Replace with your client id
+export const clientId = "034e6eebfdf44cf4bef77047c2647420"; // Replace with your client id
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
@@ -21,6 +21,63 @@ if (!code) {
     const playlistName = document.getElementById("playlist_name");
     const keywordTitle = document.getElementById("keyword_title");
 
+    // Genre display function
+
+    async function fetchAndRenderGenres() {
+        try {
+            const result_genre = await fetch("https://api.spotify.com/v1/recommendations/available-genre-seeds", {
+                method: "GET",
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+        
+            const genre_json = await result_genre.json();
+        
+            const genres = genre_json.genres;
+        
+            // DOM elements
+
+            const genre_input = document.getElementById("genre_input");
+            const optionsContainer = document.getElementById("genre_options");
+        
+            // Display options
+
+            function renderOptions(filteredOptions) {
+
+                optionsContainer.innerHTML = ""; // Erase old options
+
+                filteredOptions.forEach(option => {
+                    const div = document.createElement("div");
+                    div.textContent = option; // Display text
+                    div.onclick = () => {
+                        genre_input.value = option;
+                        optionsContainer.innerHTML = "";
+                    };
+                    optionsContainer.appendChild(div);
+                });
+            }
+        
+            // User input
+
+            genre_input.addEventListener("input", () => {
+                const searchText = genre_input.value.toLowerCase();
+                const filteredOptions = genres.filter(option =>
+                option.toLowerCase().includes(searchText)
+                );
+                renderOptions(filteredOptions);
+            });
+        
+            // Remove commentary if you want to display options directly
+            // renderOptions(genres);
+
+        } catch (error) {
+            console.error("Genre recovery error :", error);
+        }
+    }
+
+    // Always working
+
+    fetchAndRenderGenres();
+
     if (createPlaylistButton) {
         createPlaylistButton.addEventListener("click", async () => {
             const userID = profile.id;
@@ -28,7 +85,7 @@ if (!code) {
                 const playlist = await createPlaylist(userID, accessToken, playlistName.value);
                 if (keywordTitle.value) {
                     const playlist_id = playlist.id;
-                    addSong_based_on_title(accessToken, playlist_id, keywordTitle.value);
+                    addSong_based_on_title(accessToken, playlist_id, keywordTitle.value, genre_input.value);
                 }
                 console.log("Playlist created", playlist);
             } catch (error) {
@@ -167,7 +224,7 @@ async function createPlaylist(userID, accessToken, playlistName) {
 
 //////////// addSong_based_on_title function ////////////
 
-async function addSong_based_on_title(accessToken, playlist_id, keywordTitle) {
+async function addSong_based_on_title(accessToken, playlist_id, keywordTitle, genre) {
 
     if (!keywordTitle) {
         keywordTitle = "Blue";
@@ -175,7 +232,7 @@ async function addSong_based_on_title(accessToken, playlist_id, keywordTitle) {
 
     // song uris recovery
 
-    const result_research = await fetch(`https://api.spotify.com/v1/search?q=${keywordTitle}&type=track`, {
+    const result_research = await fetch(`https://api.spotify.com/v1/search?q=track:${keywordTitle}%20genre:${genre}%20&type=track`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${accessToken}`

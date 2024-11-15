@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <title>My Spotify Profile</title>
         <script src="src/script.js" type="module"></script>
+        <link rel="stylesheet" href="css/styles.css">
     </head>
     <body>
       <h1>Display your Spotify profile data</h1>
@@ -23,6 +24,18 @@
       <section id="create_playlist">
         <input id="playlist_name" type="text" placeholder="Playlist name">
         <input id="keyword_title" type="text" placeholder="Keyword (title)">
+        <div class="genre_dropdown_container">
+          <input
+            type="text"
+            class="genre_input"
+            placeholder="Select Genre"
+            id="genre_input"
+          />
+          <div class="genre_options" id="genre_options">
+            <!-- Options will be filled dynamically -->
+          </div>
+        </div>
+
         <button id="create_playlist_button">
             Create a playlist
         </button>
