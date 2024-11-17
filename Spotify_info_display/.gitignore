@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# training
+venv/
+*.pyc
+*.pyo
+__pycache__/
+*.pdb
+.env
