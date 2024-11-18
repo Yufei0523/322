@@ -73,15 +73,16 @@ npm install # Make sure to be in the Spotify_info_display folder. (We will chang
 
 ### Run
 
-When your environment is up to date, you can execute in your terminal the following code:
+When your environment is up to date, you can execute in your terminal the following code in **Spotify_info_display/src**:
 
 ```
-npm run dev
+npm start
 ```
 
 Copy the url to your browser and connect your account to spotify.
 
 The default name of playlist is "NewPlaylist".
 The default keyword is "Blue".
+The default genre is "pop"
 
 **Note:** You can only run the code by changing the userID given by you Spotify Developer Account in the first line of script.js.
