@@ -1,20 +1,29 @@
 export const clientId = "034e6eebfdf44cf4bef77047c2647420"; // Replace with your client id
-
-// Verify if the code is present in the URL
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
 if (!code) {
+
     redirectToAuthCodeFlow(clientId);
+
 } else {
+
+    // Loading of the Data
+
     const accessToken = await getAccessToken(clientId, code);
     const profile = await fetchProfile(accessToken);
     console.log(profile);
     populateUI(profile);
 
-     // Genre display function
+    // createPlaylistButton
 
-     async function fetchAndRenderGenres() {
+    const createPlaylistButton = document.getElementById("create_playlist_button");
+    const playlistName = document.getElementById("playlist_name");
+    const keywordTitle = document.getElementById("keyword_title");
+
+    // Genre display function
+
+    async function fetchAndRenderGenres() {
         try {
             const result_genre = await fetch("https://api.spotify.com/v1/recommendations/available-genre-seeds", {
                 method: "GET",
@@ -68,24 +77,25 @@ if (!code) {
     // Always working
 
     fetchAndRenderGenres();
-    
-    document.getElementById("create_playlist_button").addEventListener("click", async () => {
-        try {
-            const playlistName = document.getElementById("playlist_name").value;
-            const playlist = await createPlaylist(playlistName, accessToken);
-            const keywordTitle = document.getElementById("keyword_title");
 
-            if (keywordTitle.value) {
-                const playlist_id = playlist.id;
-                await addSong_based_on_title(accessToken, playlist_id, keywordTitle.value, genre_input.value);
-            }       
-        } catch (error) {
-            console.error("Error creating playlist", error);
-        }
-    });
+    if (createPlaylistButton) {
+        createPlaylistButton.addEventListener("click", async () => {
+            const userID = profile.id;
+            try {
+                const playlist = await createPlaylist(userID, accessToken, playlistName.value);
+                if (keywordTitle.value) {
+                    const playlist_id = playlist.id;
+                    addSong_based_on_title(accessToken, playlist_id, keywordTitle.value, genre_input.value);
+                }
+                console.log("Playlist created", playlist);
+            } catch (error) {
+                console.error("Error creating playlist", error);
+            }
+        });
+    }
 }
 
-// Function to get the access token
+//// getAccessToken function ////
 
 export async function getAccessToken(clientId, code) {
     const verifier = localStorage.getItem("verifier");
@@ -97,21 +107,17 @@ export async function getAccessToken(clientId, code) {
     params.append("redirect_uri", "http://localhost:5173/callback");
     params.append("code_verifier", verifier);
 
-    const result = await fetch("http://localhost:3000/auth/token", {
+    const result = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params
     });
 
-    if (!result.ok) {
-        throw new Error("Failed to fetch access token");
-    }
-
     const { access_token } = await result.json();
     return access_token;
 }
 
-// Function to fetch the user profile
+//////////// fetchProfile function ////////////
 
 async function fetchProfile(token) {
     const result = await fetch("https://api.spotify.com/v1/me", {
@@ -121,7 +127,7 @@ async function fetchProfile(token) {
     return await result.json();
 }
 
-// Function to populate the user interface
+//////////// populateUI function ////////////
 
 function populateUI(profile) {
     document.getElementById("displayName").innerText = profile.display_name;
@@ -139,7 +145,7 @@ function populateUI(profile) {
     document.getElementById("url").setAttribute("href", profile.href);
 }
 
-// Function to redirect to the Spotify authentication page
+//////////// Recovery of Spotify data ////////////
 
 export async function redirectToAuthCodeFlow(clientId) {
     const verifier = generateCodeVerifier(128);
@@ -158,8 +164,6 @@ export async function redirectToAuthCodeFlow(clientId) {
     document.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
-// Function to generate a code verifier
-
 function generateCodeVerifier(length) {
     let text = '';
     let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -170,7 +174,6 @@ function generateCodeVerifier(length) {
     return text;
 }
 
-// Function to generate a code challenge
 async function generateCodeChallenge(codeVerifier) {
     const data = new TextEncoder().encode(codeVerifier);
     const digest = await window.crypto.subtle.digest('SHA-256', data);
@@ -180,77 +183,96 @@ async function generateCodeChallenge(codeVerifier) {
         .replace(/=+$/, '');
 }
 
-// ----------- createPlaylist function ----------- //
+//////////// createPlaylist function ////////////
 
-async function createPlaylist(playlistName, accessToken) {
+async function createPlaylist(userID, accessToken, playlistName) {
+
+    // parameters of the playlist (can be changed by the user later)
     if (!playlistName) {
-        playlistName = "New Playlist";
+        playlistName = "NewPlaylist";
     }
 
-    try {
-        const response = await fetch('http://localhost:3000/api/create-playlist', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                playlist_name: playlistName,
-                access_token: accessToken,
-            }),
-        });
+    const param = {
+        name: playlistName,
+        public: false,
+        collaborative: false,
+        description: "Playlist generated by KeywordAI"
+    };
 
-        const data = await response.json();
-    
-        if (response.ok) {
-            document.getElementById("playlist_created").innerText = `Playlist created successfully: ${data.name}`;
-        } else {
-            document.getElementById("playlist_created").innerText = `Error: ${data.error}`;
-        }
-        
-        return data;
-    } catch (error) {
-        console.error("Error:", error);
-        document.getElementById("playlist_created").innerText = "An error occurred while creating the playlist.";
+    const result = await fetch(`https://api.spotify.com/v1/users/${userID}/playlists`, {
+        method: "POST",
+        headers: { 
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(param)
+    });
+
+    if (!result.ok) {
+        throw new Error(`HTTP error! status: ${result.status}`);
     }
+
+    // Confirmation message
+
+    const message = document.getElementById("playlist_created");
+    if (message) {
+        message.innerText = "Playlist created successfully!";
+    }
+
+    return await result.json();
 }
 
-// ----------- addSong function ----------- //
+//////////// addSong_based_on_title function ////////////
 
 async function addSong_based_on_title(accessToken, playlist_id, keywordTitle, genre) {
+
     if (!keywordTitle) {
         keywordTitle = "Blue";
     }
 
-    if (!genre) {
-        genre = "pop";
-    }
+    // song uris recovery
 
-    try {
-        const response = await fetch('http://localhost:3000/api/add-song', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                playlist_id: playlist_id,
-                keywordTitle: keywordTitle,
-                genre: genre,
-                access_token: accessToken
-            }),
-        });
-
-        // Vérifier si la réponse est ok
-        if (!response.ok) {
-            // Essayer de récupérer la réponse JSON (si disponible) ou le texte brut
-            const errorData = await response.json().catch(() => response.text());
-            throw new Error(`Error: ${errorData.error || errorData}, Details: ${errorData.details || 'No details'}`);
+    const result_research = await fetch(`https://api.spotify.com/v1/search?q=track:${keywordTitle}%20genre:${genre}%20&type=track`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
         }
+    });
 
-        const data = await response.json();  // Lire la réponse JSON
-        return data;
-
-    } catch (error) {
-        console.error("Error:", error);
-        alert(error.message);  // Afficher le message d'erreur
+    if (!result_research.ok) {
+        throw new Error(`HTTP error! status: ${result_research.status}`);
     }
+
+    const result_json = await result_research.json();
+    let uris = [];
+    console.log(result_json);
+    console.log('IDs des pistes :');
+    result_json.tracks.items.forEach(item => {
+        uris.push(item.uri);
+        console.log(`ID de la piste: ${item.id}`);
+    });
+
+    console.log(`tableau uris: ${uris}`);
+
+    // playlist song adding
+
+    const param_add = {
+        uris: uris,
+        position: 0
+    };
+
+    const result_add = await fetch(`https://api.spotify.com/v1/playlists/${playlist_id}/tracks`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(param_add)
+    });
+
+    if (!result_add.ok) {
+        throw new Error(`HTTP error! status: ${result_add.status}`);
+    }
+    
+    return await result_add.json();
 }
