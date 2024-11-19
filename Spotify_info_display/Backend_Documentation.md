@@ -18,14 +18,14 @@ Exchanges an authorization code obtained from Spotify for an access token.
 - `code_verifier` (string): The PKCE code verifier used during authorization.
 
 **Response:**  
-- A JSON object containing the following:
-  - `access_token` (string): Token to be used for subsequent API calls.
-  - `token_type` (string): Type of token (e.g., "Bearer").
-  - `expires_in` (number): Token lifetime in seconds.
-  - `refresh_token` (string): Token to refresh the access token when it expires.
-
-**Error:**
-- Returns a 500 status with the message: "Failed to fetch token" or details of the error.
+- On success:
+    - A JSON object containing the following:
+    - `access_token` (string): Token to be used for subsequent API calls.
+    - `token_type` (string): Type of token (e.g., "Bearer").
+    - `expires_in` (number): Token lifetime in seconds.
+    - `refresh_token` (string): Token to refresh the access token when it expires.
+- On failure:
+    - 500 status with the message: "Failed to fetch token" or details of the error.
 
 ---
 
@@ -47,13 +47,14 @@ Creates a new playlist for the authenticated user.
 3. Returns the playlist details.
 
 **Response:**  
-- A JSON object containing details of the newly created playlist:
-  - `id` (string): Playlist ID.
-  - `name` (string): Name of the playlist.
-  - `href` (string): Link to the playlist.
-
-**Error:**
-- Returns a 400 status if `playlist_name` or `access_token` is missing or a 500 status if the playlist creation fails.
+- On success:
+    - A JSON object containing details of the newly created playlist:
+    - `id` (string): Playlist ID.
+    - `name` (string): Name of the playlist.
+    - `href` (string): Link to the playlist.
+- On failure:
+    - 400 status if `playlist_name` or `access_token` is missing
+    - 500 status if the playlist creation fails.
 
 ---
 
@@ -84,12 +85,34 @@ Searches for songs based on a keyword and genre, and adds them to a specified pl
     - `No songs found for the given keyword and genre`.
     - `Error adding song to playlist`.
 
-**Error:**
-- Returns a 400 status if `playlist_id` or `access_token` is missing.
-- Returns a 400 status with an error message if no songs are found for the given keyword and genre.
-- Returns a 500 status if adding songs to the playlist fails.
+---
+
+## 4. Get List of Available Genres
+
+**Route:**
+`POST /api/get-genre`
+
+**Description:**
+Search the list of all Spotify genres.
+
+**Required Inputs (Request Body):**
+- `access_token` (string): A valid access token for authentication.
+
+**Process:**
+1. Send a GET request to Spotify's API to get a json list of all genres provided by Spotify.
+
+**Response:**
+- On success:
+    - A JSON object containing a list of all genres
+        {
+            "genres": ["alternative", "samba"]
+        }
+- On failure:
+  - An error response detailing the issue, such as:
+    - `Error fetching genres`.
 
 ---
+
 
 | **Variable**      | **Type**   | **Description**                                            |
 |--------------------|------------|------------------------------------------------------------|

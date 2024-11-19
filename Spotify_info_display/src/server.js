@@ -162,6 +162,22 @@ app.post("/api/add-song", async (req, res) => {
     
 });
 
+// 3. Endpoint to get list of available genres
+
+app.get("/api/get-genre", async (req, res) => {
+    const { access_token } = req.body;
+    try {
+        const result_genre = await fetch("https://api.spotify.com/v1/recommendations/available-genre-seeds", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        res.json(await result_genre.json());
+    } catch (error) {
+        console.error("Error fetching genres", error);
+    }
+});
+
 
 // Server listening on port 3000
 const PORT = 3000;
