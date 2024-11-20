@@ -2,6 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import bodyParser from "body-parser";
+import crypto from 'crypto';
 
 const app = express();
 app.use(cors());
@@ -43,7 +44,64 @@ app.post("/auth/token", async (req, res) => {
     }
 });
 
-// 2. Endpoint to create a playlist
+// 2. Endpoint to get verifier and challenge codes
+
+app.post("/auth/ver-cha-code", async (req, res) => {
+    const {client_id} = req.body;
+
+    try {
+        const verifier = generateCodeVerifier(128);
+        const challenge = await generateCodeChallenge(verifier);
+        res.json({ verifier, challenge });
+
+    } catch (error) {
+        console.error("Error generating code challenge and verifier", error);
+    }
+
+    
+
+});
+
+// Function to generate a code verifier
+
+function generateCodeVerifier(length) {
+    let text = '';
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+}
+
+// Function to generate a code challenge
+
+async function generateCodeChallenge(codeVerifier) {
+    // Use Node.js crypto module to generate the SHA-256 digest
+    const hash = crypto.createHash("sha256").update(codeVerifier).digest("base64url");
+
+    // Convert the hash to a URL-safe format if necessary
+    return hash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// 3. Endpoint to fetch the user profile
+
+app.post("/auth/profile", async (req, res) => {
+    const { access_token } = req.body;
+
+    try {
+        const result = await fetch("https://api.spotify.com/v1/me", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        res.json(await result.json());
+    } catch (error) {
+        console.error("Error fetching profile", error);
+    }
+});
+
+// 4. Endpoint to create a playlist
 
 app.post("/api/create-playlist", async (req, res) => {
     const { playlist_name, access_token } = req.body;
@@ -93,7 +151,7 @@ app.post("/api/create-playlist", async (req, res) => {
     }
 });
 
-// 3. Endpoint to add songs in the playlist
+// 5. Endpoint to add songs in the playlist
 
 app.post("/api/add-song", async (req, res) => {
     const { playlist_id, keywordTitle, genre, access_token } = req.body;
@@ -162,9 +220,9 @@ app.post("/api/add-song", async (req, res) => {
     
 });
 
-// 3. Endpoint to get list of available genres
+// 6. Endpoint to get list of available genres
 
-app.get("/api/get-genre", async (req, res) => {
+app.post("/api/get-genre", async (req, res) => {
     const { access_token } = req.body;
     try {
         const result_genre = await fetch("https://api.spotify.com/v1/recommendations/available-genre-seeds", {
@@ -177,6 +235,7 @@ app.get("/api/get-genre", async (req, res) => {
         console.error("Error fetching genres", error);
     }
 });
+
 
 
 // Server listening on port 3000

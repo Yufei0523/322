@@ -20,16 +20,56 @@ Exchanges an authorization code obtained from Spotify for an access token.
 **Response:**  
 - On success:
     - A JSON object containing the following:
-    - `access_token` (string): Token to be used for subsequent API calls.
-    - `token_type` (string): Type of token (e.g., "Bearer").
-    - `expires_in` (number): Token lifetime in seconds.
-    - `refresh_token` (string): Token to refresh the access token when it expires.
+        - `access_token` (string): Token to be used for subsequent API calls.
+        - `token_type` (string): Type of token (e.g., "Bearer").
+        - `expires_in` (number): Token lifetime in seconds.
+        - `refresh_token` (string): Token to refresh the access token when it expires.
 - On failure:
     - 500 status with the message: "Failed to fetch token" or details of the error.
 
 ---
 
-## 2. Create Playlist Endpoint
+## 2. Getting verifier and challenge codes
+
+**Route:**
+`POST /auth/ver-cha-code`
+
+**Description:**
+Returns verifier and challenge code which are needed to authenticate to Spotify
+
+**Required Inputs (Request Body):**
+- `client_id`(string): ID of the Spotify account
+
+**Response:**
+- On success:
+    - A JSON object containing the following:
+        - `verifier`(string): the verifier code generated
+        - `challenge`(string): the challenge code generated
+- On failure:
+    - 500 status with the message: "Error generating code challenge and verifier" or details of the error.
+
+---
+
+## 3. Fetching User Profile
+
+**Route:**
+`POST /auth/profile`
+
+**Description:**
+Recover user profil information.
+
+**Required input (Request Body):**
+- `access_token`(string): A valid token.
+
+**Response:**
+- On success:
+    - A JSON object containing the user details
+- On failure:
+    - 500 status with the message: "Error fetching profile" or details of the error.
+
+---
+
+## 4. Create Playlist Endpoint
 
 **Route:**  
 `POST /api/create-playlist`
@@ -58,7 +98,7 @@ Creates a new playlist for the authenticated user.
 
 ---
 
-## 3. Add Song to Playlist Endpoint
+## 5. Add Song to Playlist Endpoint
 
 **Route:**  
 `POST /api/add-song`
@@ -87,7 +127,7 @@ Searches for songs based on a keyword and genre, and adds them to a specified pl
 
 ---
 
-## 4. Get List of Available Genres
+## 6. Get List of Available Genres
 
 **Route:**
 `POST /api/get-genre`
@@ -122,7 +162,10 @@ Search the list of all Spotify genres.
 | `playlist_name`   | `string`   | Desired name for the new playlist.                          |
 | `playlist_id`     | `string`   | ID of the playlist where songs will be added.               |
 | `keywordTitle`    | `string`   | Search keyword for song titles.                             |
-| `genre`           | `string`   | Optional genre filter for song search.                      |
+| `genre`           | `string`   | Optional genre filter for song search.                       |
+| `client_id`           | `string`   | Id of the Spotify Developer Account                    |
+| `verifier`           | `string`   | Verifier code needed to authorize connexion    | 
+| `challenge`           | `string`   | Challenge code needed to authorize connexion                    |
 --- 
 
 Use `npm install` then `npm start` to launch.

@@ -5,7 +5,14 @@ const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
 if (!code) {
-    redirectToAuthCodeFlow(clientId);
+    const result = await fetch("http://localhost:3000/auth/ver-cha-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_id: clientId })
+    });
+    console.log(result);
+    const { verifier, challenge } = await result.json();
+    redirectToAuthCodeFlow(clientId, verifier, challenge);
 } else {
     const accessToken = await getAccessToken(clientId, code);
     const profile = await fetchProfile(accessToken);
@@ -114,9 +121,12 @@ export async function getAccessToken(clientId, code) {
 // Function to fetch the user profile
 
 async function fetchProfile(token) {
-    const result = await fetch("https://api.spotify.com/v1/me", {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-    });
+
+    const result = await fetch("http://localhost:3000/auth/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: token })
+    })
 
     return await result.json();
 }
@@ -141,9 +151,7 @@ function populateUI(profile) {
 
 // Function to redirect to the Spotify authentication page
 
-export async function redirectToAuthCodeFlow(clientId) {
-    const verifier = generateCodeVerifier(128);
-    const challenge = await generateCodeChallenge(verifier);
+export async function redirectToAuthCodeFlow(clientId, verifier, challenge) {
 
     localStorage.setItem("verifier", verifier);
 
@@ -156,28 +164,6 @@ export async function redirectToAuthCodeFlow(clientId) {
     params.append("code_challenge", challenge);
 
     document.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
-}
-
-// Function to generate a code verifier
-
-function generateCodeVerifier(length) {
-    let text = '';
-    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (let i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-}
-
-// Function to generate a code challenge
-async function generateCodeChallenge(codeVerifier) {
-    const data = new TextEncoder().encode(codeVerifier);
-    const digest = await window.crypto.subtle.digest('SHA-256', data);
-    return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
 }
 
 // ----------- createPlaylist function ----------- //
