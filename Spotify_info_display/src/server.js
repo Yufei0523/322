@@ -161,7 +161,7 @@ app.post("/api/add-song", async (req, res) => {
     }
 
     let uris = [];
-
+    const tracks = {};
     // Research of songs
 
     console.log(genre);
@@ -178,7 +178,7 @@ app.post("/api/add-song", async (req, res) => {
         }
     
         const result_json = await result_research.json();
-
+        tracks = result_json.tracks.items;
         result_json.tracks.items.forEach(item => {
             uris.push(item.uri);
         });
@@ -212,7 +212,7 @@ app.post("/api/add-song", async (req, res) => {
         }
         
         const response_add = await result_add.json();
-        res.json(response_add); 
+        res.json(response_add, tracks); 
     } catch (error) {
         console.error("Error adding song to playlist");
         res.status(500).json({ error: "Error adding song to playlist", details: error.message });

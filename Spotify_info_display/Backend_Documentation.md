@@ -120,6 +120,7 @@ Searches for songs based on a keyword and genre, and adds them to a specified pl
 **Response:**  
 - On success:  
   - A JSON object confirming the songs were added successfully.
+  - `tracks`: JSON object which contains all tracks information
 - On failure:  
   - An error response detailing the issue, such as:
     - `No songs found for the given keyword and genre`.
