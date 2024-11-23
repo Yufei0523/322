@@ -85,7 +85,8 @@ if (!code) {
             if (keywordTitle.value) {
                 const playlist_id = playlist.id;
                 const res_add = await addSong_based_on_title(accessToken, playlist_id, keywordTitle.value, genre_input.value);
-                // const tracks = res_add.tracks;
+                const tracks = res_add.song_list;
+                console.log(tracks);
             }       
         } catch (error) {
             console.error("Error creating playlist", error);
